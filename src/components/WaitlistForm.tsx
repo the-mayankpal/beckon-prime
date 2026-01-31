@@ -2,6 +2,10 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { z } from "zod";
+
+const emailSchema = z.string().trim().email("Please enter a valid email address").max(255);
 
 const WaitlistForm = () => {
   const [email, setEmail] = useState("");
@@ -10,19 +14,35 @@ const WaitlistForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email) {
-      toast.error("Please enter your email address");
+    const validation = emailSchema.safeParse(email);
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
       return;
     }
 
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    toast.success("You're on the list! We'll be in touch soon.");
-    setEmail("");
-    setIsLoading(false);
+    try {
+      const { error } = await supabase
+        .from("waitlist")
+        .insert({ email: validation.data });
+
+      if (error) {
+        if (error.code === "23505") {
+          toast.error("You're already on the waitlist!");
+        } else {
+          toast.error("Something went wrong. Please try again.");
+        }
+        return;
+      }
+      
+      toast.success("You're on the list! We'll be in touch soon.");
+      setEmail("");
+    } catch {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
