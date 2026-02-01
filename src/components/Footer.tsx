@@ -1,11 +1,8 @@
 const Footer = () => {
-  return (
-    <footer className="w-full text-center py-3 flex-shrink-0">
+  return <footer className="w-full text-center py-3 flex-shrink-0">
       <p className="text-xs text-muted-foreground">
-        Get template · Made with passion · Built for the future
+        ​
       </p>
-    </footer>
-  );
+    </footer>;
 };
-
 export default Footer;
